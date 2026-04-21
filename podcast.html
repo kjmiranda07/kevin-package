@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Matchday Dispatch</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #151820;
+      --surface2: #1e2330;
+      --border: #2a2f3d;
+      --accent: #e8c84a;
+      --accent2: #4a90e8;
+      --text: #f0f2f7;
+      --muted: #6b7280;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 64px 24px 48px;
+      background: radial-gradient(ellipse at 50% 0%, #1a2040 0%, var(--bg) 70%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #0d0f14;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* FORM SHELL */
+    .form-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* PROGRESS */
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 48px;
+    }
+
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .progress-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: var(--border);
+      z-index: 0;
+    }
+
+    .progress-step.done:not(:last-child)::after,
+    .progress-step.active:not(:last-child)::after {
+      background: var(--accent);
+    }
+
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+
+    .progress-step.active .step-dot {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0d0f14;
+    }
+
+    .progress-step.done .step-dot {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0d0f14;
+    }
+
+    .step-label {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .progress-step.active .step-label { color: var(--accent); }
+
+    /* STEPS */
+    .step { display: none; animation: fadeIn 0.3s ease; }
+    .step.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .step-subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    /* TEAM GRID */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .team-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .team-card:hover {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+
+    .team-card.selected {
+      border-color: var(--accent);
+      background: #1f1e0f;
+    }
+
+    .team-emoji { font-size: 1.6rem; display: block; margin-bottom: 6px; }
+
+    .team-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    /* CHECKBOX PILLS */
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 30px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill:hover { border-color: var(--accent); }
+
+    .pill.selected {
+      border-color: var(--accent);
+      background: #1f1e0f;
+      color: var(--accent);
+    }
+
+    /* RADIO CARDS */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .radio-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .radio-card:hover { border-color: var(--accent); background: var(--surface2); }
+
+    .radio-card.selected {
+      border-color: var(--accent);
+      background: #1f1e0f;
+    }
+
+    .radio-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .radio-card.selected .radio-dot {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .radio-card.selected .radio-dot::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #0d0f14;
+    }
+
+    .radio-info { flex: 1; }
+    .radio-label { font-weight: 700; font-size: 0.95rem; }
+    .radio-desc { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    .radio-emoji { font-size: 1.4rem; }
+
+    /* INPUT */
+    .input-field {
+      width: 100%;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    .input-field:focus { border-color: var(--accent); }
+    .input-field::placeholder { color: var(--muted); }
+
+    .input-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    /* TWO COL */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 500px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* SECTION DIVIDER */
+    .section-gap { margin-top: 32px; }
+
+    /* BUTTONS */
+    .btn-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 40px;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--muted);
+    }
+
+    .btn-back:hover { border-color: var(--text); color: var(--text); }
+
+    .btn-next {
+      background: var(--accent);
+      color: #0d0f14;
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-next:hover { background: #f5d96a; transform: translateY(-1px); }
+    .btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-generate {
+      background: var(--accent);
+      color: #0d0f14;
+      padding: 16px 36px;
+      font-size: 1rem;
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-generate:hover { background: #f5d96a; transform: translateY(-1px); }
+
+    /* SUMMARY CARD */
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 12px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      gap: 16px;
+    }
+
+    .summary-row:last-child { border-bottom: none; }
+    .summary-key { color: var(--muted); font-weight: 600; flex-shrink: 0; }
+    .summary-val { color: var(--text); text-align: right; font-weight: 500; }
+
+    .generate-note {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+    /* VALIDATION */
+    .error-msg {
+      color: #f87171;
+      font-size: 0.82rem;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">Premier League · Powered by AI</div>
+    <h1>Your Personal<br /><span>Matchday Dispatch</span></h1>
+    <p>Tell us who you support and what you care about. We'll generate a custom podcast — just for you.</p>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-container">
+
+    <!-- PROGRESS -->
+    <div class="progress-bar">
+      <div class="progress-step active" id="prog-1">
+        <div class="step-dot">1</div>
+        <div class="step-label">Team</div>
+      </div>
+      <div class="progress-step" id="prog-2">
+        <div class="step-dot">2</div>
+        <div class="step-label">Topics</div>
+      </div>
+      <div class="progress-step" id="prog-3">
+        <div class="step-dot">3</div>
+        <div class="step-label">Style</div>
+      </div>
+      <div class="progress-step" id="prog-4">
+        <div class="step-dot">4</div>
+        <div class="step-label">Voice</div>
+      </div>
+      <div class="progress-step" id="prog-5">
+        <div class="step-dot">5</div>
+        <div class="step-label">Generate</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: TEAM -->
+    <div class="step active" id="step-1">
+      <div class="step-title">Which club do you support?</div>
+      <div class="step-subtitle">Pick one — your podcast will be centered around them.</div>
+
+      <div class="team-grid">
+        <div class="team-card" data-team="Arsenal" onclick="selectTeam(this)">
+          <span class="team-emoji">🔴</span>
+          <span class="team-name">Arsenal</span>
+        </div>
+        <div class="team-card" data-team="Aston Villa" onclick="selectTeam(this)">
+          <span class="team-emoji">🟣</span>
+          <span class="team-name">Aston Villa</span>
+        </div>
+        <div class="team-card" data-team="Bournemouth" onclick="selectTeam(this)">
+          <span class="team-emoji">🍒</span>
+          <span class="team-name">Bournemouth</span>
+        </div>
+        <div class="team-card" data-team="Brentford" onclick="selectTeam(this)">
+          <span class="team-emoji">🐝</span>
+          <span class="team-name">Brentford</span>
+        </div>
+        <div class="team-card" data-team="Brighton" onclick="selectTeam(this)">
+          <span class="team-emoji">🔵</span>
+          <span class="team-name">Brighton</span>
+        </div>
+        <div class="team-card" data-team="Chelsea" onclick="selectTeam(this)">
+          <span class="team-emoji">💙</span>
+          <span class="team-name">Chelsea</span>
+        </div>
+        <div class="team-card" data-team="Crystal Palace" onclick="selectTeam(this)">
+          <span class="team-emoji">🦅</span>
+          <span class="team-name">Crystal Palace</span>
+        </div>
+        <div class="team-card" data-team="Everton" onclick="selectTeam(this)">
+          <span class="team-emoji">🔵</span>
+          <span class="team-name">Everton</span>
+        </div>
+        <div class="team-card" data-team="Fulham" onclick="selectTeam(this)">
+          <span class="team-emoji">⚫</span>
+          <span class="team-name">Fulham</span>
+        </div>
+        <div class="team-card" data-team="Ipswich Town" onclick="selectTeam(this)">
+          <span class="team-emoji">🔵</span>
+          <span class="team-name">Ipswich Town</span>
+        </div>
+        <div class="team-card" data-team="Leicester City" onclick="selectTeam(this)">
+          <span class="team-emoji">🦊</span>
+          <span class="team-name">Leicester City</span>
+        </div>
+        <div class="team-card" data-team="Liverpool" onclick="selectTeam(this)">
+          <span class="team-emoji">❤️</span>
+          <span class="team-name">Liverpool</span>
+        </div>
+        <div class="team-card" data-team="Man City" onclick="selectTeam(this)">
+          <span class="team-emoji">🩵</span>
+          <span class="team-name">Man City</span>
+        </div>
+        <div class="team-card" data-team="Man United" onclick="selectTeam(this)">
+          <span class="team-emoji">🔴</span>
+          <span class="team-name">Man United</span>
+        </div>
+        <div class="team-card" data-team="Newcastle" onclick="selectTeam(this)">
+          <span class="team-emoji">⚫</span>
+          <span class="team-name">Newcastle</span>
+        </div>
+        <div class="team-card" data-team="Nottm Forest" onclick="selectTeam(this)">
+          <span class="team-emoji">🌳</span>
+          <span class="team-name">Nottm Forest</span>
+        </div>
+        <div class="team-card" data-team="Southampton" onclick="selectTeam(this)">
+          <span class="team-emoji">🔴</span>
+          <span class="team-name">Southampton</span>
+        </div>
+        <div class="team-card" data-team="Spurs" onclick="selectTeam(this)">
+          <span class="team-emoji">⚪</span>
+          <span class="team-name">Spurs</span>
+        </div>
+        <div class="team-card" data-team="West Ham" onclick="selectTeam(this)">
+          <span class="team-emoji">⚒️</span>
+          <span class="team-name">West Ham</span>
+        </div>
+        <div class="team-card" data-team="Wolves" onclick="selectTeam(this)">
+          <span class="team-emoji">🟠</span>
+          <span class="team-name">Wolves</span>
+        </div>
+      </div>
+
+      <div class="error-msg" id="err-1">Please select your club to continue.</div>
+      <div class="btn-row">
+        <button class="btn btn-next" onclick="nextStep(1)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: TOPICS -->
+    <div class="step" id="step-2">
+      <div class="step-title">What do you want to hear about?</div>
+      <div class="step-subtitle">Pick as many as you like — your podcast will focus on these.</div>
+
+      <div class="pill-group">
+        <div class="pill" onclick="togglePill(this)" data-val="Match Results & Reactions">⚽ Match Results & Reactions</div>
+        <div class="pill" onclick="togglePill(this)" data-val="Tactics & Analysis">🧠 Tactics & Analysis</div>
+        <div class="pill" onclick="togglePill(this)" data-val="Transfer News & Rumours">🔁 Transfer News & Rumours</div>
+        <div class="pill" onclick="togglePill(this)" data-val="Injury & Team News">🩹 Injury & Team News</div>
+        <div class="pill" onclick="togglePill(this)" data-val="Title Race & Standings">🏆 Title Race & Standings</div>
+        <div class="pill" onclick="togglePill(this)" data-val="European Football">🌍 European Football</div>
+        <div class="pill" onclick="togglePill(this)" data-val="Pundit Opinions">🎙️ Pundit Opinions</div>
+        <div class="pill" onclick="togglePill(this)" data-val="Manager News">🧥 Manager News</div>
+      </div>
+
+      <div class="error-msg" id="err-2">Please pick at least one topic.</div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevStep(2)">← Back</button>
+        <button class="btn btn-next" onclick="nextStep(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: STYLE -->
+    <div class="step" id="step-3">
+      <div class="step-title">How should it sound?</div>
+      <div class="step-subtitle">Choose your preferred tone and length.</div>
+
+      <div class="input-label">Tone</div>
+      <div class="radio-group">
+        <div class="radio-card" onclick="selectRadio(this, 'tone')" data-group="tone" data-val="Analytical">
+          <span class="radio-emoji">🧠</span>
+          <div class="radio-info">
+            <div class="radio-label">Analytical</div>
+            <div class="radio-desc">Data-driven, tactical breakdowns, objective takes</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+        <div class="radio-card" onclick="selectRadio(this, 'tone')" data-group="tone" data-val="Passionate">
+          <span class="radio-emoji">🔥</span>
+          <div class="radio-info">
+            <div class="radio-label">Passionate & Opinionated</div>
+            <div class="radio-desc">Fan energy, strong takes, emotional reactions</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+        <div class="radio-card" onclick="selectRadio(this, 'tone')" data-group="tone" data-val="Casual">
+          <span class="radio-emoji">☕</span>
+          <div class="radio-info">
+            <div class="radio-label">Casual & Fun</div>
+            <div class="radio-desc">Laid-back, conversational, easy listening</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+      </div>
+
+      <div class="section-gap"></div>
+      <div class="input-label">Length</div>
+      <div class="radio-group">
+        <div class="radio-card" onclick="selectRadio(this, 'length')" data-group="length" data-val="3–5 minutes">
+          <span class="radio-emoji">⚡</span>
+          <div class="radio-info">
+            <div class="radio-label">Quick Rundown</div>
+            <div class="radio-desc">3–5 minutes · Top headlines only</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+        <div class="radio-card" onclick="selectRadio(this, 'length')" data-group="length" data-val="5–10 minutes">
+          <span class="radio-emoji">🎙️</span>
+          <div class="radio-info">
+            <div class="radio-label">Standard Episode</div>
+            <div class="radio-desc">5–10 minutes · News, analysis, and pundit takes</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+        <div class="radio-card" onclick="selectRadio(this, 'length')" data-group="length" data-val="10–15 minutes">
+          <span class="radio-emoji">🎧</span>
+          <div class="radio-info">
+            <div class="radio-label">Deep Dive</div>
+            <div class="radio-desc">10–15 minutes · Full breakdown, extra context</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+      </div>
+
+      <div class="error-msg" id="err-3">Please select a tone and a length.</div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevStep(3)">← Back</button>
+        <button class="btn btn-next" onclick="nextStep(3)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: VOICE -->
+    <div class="step" id="step-4">
+      <div class="step-title">Pick your host's voice</div>
+      <div class="step-subtitle">Choose the accent and personality that feels right.</div>
+
+      <div class="radio-group">
+        <div class="radio-card" onclick="selectRadio(this, 'voice')" data-group="voice" data-val="Brian (British)">
+          <span class="radio-emoji">🇬🇧</span>
+          <div class="radio-info">
+            <div class="radio-label">Brian — British</div>
+            <div class="radio-desc">Deep, authoritative, classic football pundit energy</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+        <div class="radio-card" onclick="selectRadio(this, 'voice')" data-group="voice" data-val="Charlie (American)">
+          <span class="radio-emoji">🇺🇸</span>
+          <div class="radio-info">
+            <div class="radio-label">Charlie — American</div>
+            <div class="radio-desc">Energetic, ESPN-style sports commentary</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+        <div class="radio-card" onclick="selectRadio(this, 'voice')" data-group="voice" data-val="Charlotte (Australian)">
+          <span class="radio-emoji">🇦🇺</span>
+          <div class="radio-info">
+            <div class="radio-label">Charlotte — Australian</div>
+            <div class="radio-desc">Warm, conversational, easy to listen to</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+        <div class="radio-card" onclick="selectRadio(this, 'voice')" data-group="voice" data-val="Matilda (Irish)">
+          <span class="radio-emoji">🍀</span>
+          <div class="radio-info">
+            <div class="radio-label">Matilda — Irish</div>
+            <div class="radio-desc">Passionate, storytelling flair</div>
+          </div>
+          <div class="radio-dot"></div>
+        </div>
+      </div>
+
+      <div class="error-msg" id="err-4">Please select a voice to continue.</div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevStep(4)">← Back</button>
+        <button class="btn btn-next" onclick="nextStep(4)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: CONFIRM + GENERATE -->
+    <div class="step" id="step-5">
+      <div class="step-title">Almost there.</div>
+      <div class="step-subtitle">Tell us your name and confirm your choices.</div>
+
+      <label class="input-label" for="user-name">Your first name</label>
+      <input class="input-field" id="user-name" type="text" placeholder="e.g. Kevin" maxlength="40" />
+
+      <div class="section-gap"></div>
+      <div class="input-label">Your Podcast Summary</div>
+      <div class="summary-card" id="summary-card">
+        <div class="summary-row">
+          <span class="summary-key">Club</span>
+          <span class="summary-val" id="sum-team">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-key">Topics</span>
+          <span class="summary-val" id="sum-topics">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-key">Tone</span>
+          <span class="summary-val" id="sum-tone">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-key">Length</span>
+          <span class="summary-val" id="sum-length">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-key">Voice</span>
+          <span class="summary-val" id="sum-voice">—</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevStep(5)">← Back</button>
+        <button class="btn btn-generate" onclick="handleGenerate()">
+          🎙️ Generate My Podcast
+        </button>
+      </div>
+
+      <p class="generate-note">Your personalized episode will be generated and ready to play in about 30 seconds.</p>
+    </div>
+
+  </div>
+
+  <script>
+    const state = {
+      team: null,
+      topics: [],
+      tone: null,
+      length: null,
+      voice: null,
+    };
+
+    let currentStep = 1;
+    const totalSteps = 5;
+
+    function goToStep(n) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById(`step-${n}`).classList.add('active');
+
+      document.querySelectorAll('.progress-step').forEach((el, i) => {
+        el.classList.remove('active', 'done');
+        if (i + 1 < n) el.classList.add('done');
+        if (i + 1 === n) el.classList.add('active');
+      });
+
+      currentStep = n;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function nextStep(from) {
+      if (!validateStep(from)) return;
+      if (from === 4) populateSummary();
+      goToStep(from + 1);
+    }
+
+    function prevStep(from) {
+      goToStep(from - 1);
+    }
+
+    function validateStep(step) {
+      const err = document.getElementById(`err-${step}`);
+      if (step === 1) {
+        if (!state.team) { err.classList.add('visible'); return false; }
+      }
+      if (step === 2) {
+        if (state.topics.length === 0) { err.classList.add('visible'); return false; }
+      }
+      if (step === 3) {
+        if (!state.tone || !state.length) { err.classList.add('visible'); return false; }
+      }
+      if (step === 4) {
+        if (!state.voice) { err.classList.add('visible'); return false; }
+      }
+      if (err) err.classList.remove('visible');
+      return true;
+    }
+
+    function selectTeam(el) {
+      document.querySelectorAll('.team-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      state.team = el.dataset.team;
+    }
+
+    function togglePill(el) {
+      const val = el.dataset.val;
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        state.topics = state.topics.filter(t => t !== val);
+      } else {
+        el.classList.add('selected');
+        state.topics.push(val);
+      }
+    }
+
+    function selectRadio(el, group) {
+      document.querySelectorAll(`[data-group="${group}"]`).forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      state[group] = el.dataset.val;
+    }
+
+    function populateSummary() {
+      document.getElementById('sum-team').textContent = state.team;
+      document.getElementById('sum-topics').textContent = state.topics.join(', ');
+      document.getElementById('sum-tone').textContent = state.tone;
+      document.getElementById('sum-length').textContent = state.length;
+      document.getElementById('sum-voice').textContent = state.voice;
+    }
+
+    function handleGenerate() {
+      const name = document.getElementById('user-name').value.trim();
+      const payload = { ...state, name: name || 'Listener' };
+      console.log('Submitting podcast request:', payload);
+      // TODO: POST to /generate endpoint
+      alert(`Generating your podcast, ${payload.name}! (Backend coming soon)`);
+    }
+  </script>
+
+</body>
+</html>
